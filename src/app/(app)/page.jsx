@@ -1,16 +1,14 @@
-// "use client"
+import { signOut } from "@/lib/auth"
 
-// import { useEffect } from "react";
-
-export default function Home() {
-
-    // useEffect(() => {
-    //     console.log('Home page loaded')
-    // }, [])
-
+export default async function Home() {
     return (
-        <div>
-            My home
-        </div>
-    );
+        <form
+            action={async () => {
+                "use server"
+                await signOut()
+            }}
+        >
+            <button type="submit">Sign Out</button>
+        </form>
+    )
 }

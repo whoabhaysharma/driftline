@@ -1,12 +1,11 @@
-import { getAuthStatus } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 
-export default function Layout({ children }) {
-    const { loggedIn } = getAuthStatus();
-
-    if (!loggedIn) {
+export default async function Layout({ children }) {
+    const session = await auth()
+    console.log(session, 'SESSION')
+    if (!session) {
         redirect('/login')
     }
-
     return children;
 }
