@@ -29,7 +29,6 @@ export default function LoginPage() {
             })
 
             const idToken = await userInfo.user.getIdToken()
-
             const resp = await axios.get('/api/auth/cookieToken', {
                 headers: {
                     Authorization: `Bearer ${idToken}`
@@ -55,12 +54,21 @@ export default function LoginPage() {
         setLoading(true)
         const provider = new GoogleAuthProvider()
         try {
-            await signInWithPopup(auth, provider)
+            const userInfo = await signInWithPopup(auth, provider)
             toast({
                 title: "Success",
                 description: "You've successfully logged in with Google!",
             })
-            router.push("/")
+            const idToken = await userInfo.user.getIdToken()
+            const resp = await axios.get('/api/auth/cookieToken', {
+                headers: {
+                    Authorization: `Bearer ${idToken}`
+                }
+            })
+
+            if (resp.status === 200) {
+                router.push("/")
+            }
 
             // Redirect or update UI state here
         } catch (error) {
