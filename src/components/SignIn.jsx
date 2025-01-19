@@ -72,7 +72,6 @@ export default function LoginPage() {
 
             // Redirect or update UI state here
         } catch (error) {
-            console.log(error, 'ERROR')
             toast({
                 title: "Error",
                 description: error.message,
@@ -119,6 +118,11 @@ export default function LoginPage() {
                         {loading ? 'Logging in...' : 'Login'}
                     </Button>
                     <Button className="w-full" variant="outline" onClick={handleGoogleLogin} disabled={loading}>
+                        <img
+                            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                            alt="Google logo"
+                            className="w-5 h-5 mr-2"
+                        />
                         {loading ? 'Logging in...' : 'Login with Google'}
                     </Button>
                 </CardFooter>
