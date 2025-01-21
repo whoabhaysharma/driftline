@@ -1,3 +1,4 @@
+import BottomNavigation from "@/components/BottomNavigation";
 import { verifySessionCookie } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -11,5 +12,12 @@ export default async function Layout({ children }) {
     if (!decodedToken) {
         return redirect('/login')
     }
-    return children;
+    return (
+        <>
+            <div className="p-2">
+                {children}
+            </div>
+            <BottomNavigation />
+        </>
+    );
 }

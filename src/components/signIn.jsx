@@ -114,7 +114,7 @@ export default function SignInPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full rounded-lg h-14 text-lg bg-white bg-opacity-10 border-none text-white placeholder:text-white placeholder:opacity-70"
                 />
-                <Button className="w-full bg-white text-blue-600 rounded-lg py-4 text-lg font-semibold hover:bg-opacity-90" type="submit" disabled={loading}>
+                <Button className="w-full bg-white text-blue-300 rounded-lg py-4 text-lg font-semibold hover:bg-opacity-90" type="submit" disabled={loading}>
                     {loading ? (isLogin ? 'Logging in...' : 'Signing up...') : (isLogin ? 'Login' : 'Sign Up')}
                 </Button>
             </form>

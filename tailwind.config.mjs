@@ -7,7 +7,11 @@ export default {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-  	extend: {
+	  extend: {
+		  fontFamily: {
+			  'roboto': ['Roboto', 'sans-serif'],
+			  'custom': ['CustomFont', 'sans-serif'], // Use the name you defined in @font-face
+		  },
   		colors: {
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
