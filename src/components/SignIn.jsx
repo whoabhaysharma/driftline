@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, createUserWithEmailAndPassword } from 'firebase/auth';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
@@ -10,23 +10,32 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
-export default function LoginPage() {
+export default function AuthPage() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
+    const [isLogin, setIsLogin] = useState(true)
     const { toast } = useToast()
-
     const router = useRouter()
 
-    const handleLogin = async (e) => {
+    const handleAuth = async (e) => {
         e.preventDefault()
         setLoading(true)
         try {
-            const userInfo = await signInWithEmailAndPassword(auth, email, password)
-            toast({
-                title: "Success",
-                description: "You've successfully logged in!",
-            })
+            let userInfo
+            if (isLogin) {
+                userInfo = await signInWithEmailAndPassword(auth, email, password)
+                toast({
+                    title: "Success",
+                    description: "You've successfully logged in!",
+                })
+            } else {
+                userInfo = await createUserWithEmailAndPassword(auth, email, password)
+                toast({
+                    title: "Success",
+                    description: "You've successfully signed up!",
+                })
+            }
 
             const idToken = await userInfo.user.getIdToken()
             const resp = await axios.get('/api/auth/cookieToken', {
@@ -70,7 +79,6 @@ export default function LoginPage() {
                 router.push("/")
             }
 
-            // Redirect or update UI state here
         } catch (error) {
             toast({
                 title: "Error",
@@ -83,14 +91,16 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <Card className="w-[350px]">
+        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+            <Card className="w-[400px] shadow-lg">
                 <CardHeader>
-                    <CardTitle>Login</CardTitle>
-                    <CardDescription>Enter your credentials to access your account</CardDescription>
+                    <CardTitle>{isLogin ? 'Login' : 'Sign Up'}</CardTitle>
+                    <CardDescription>
+                        {isLogin ? 'Enter your credentials to access your account' : 'Create a new account to get started'}
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form onSubmit={handleLogin}>
+                    <form onSubmit={handleAuth}>
                         <div className="grid w-full items-center gap-4">
                             <div className="flex flex-col space-y-1.5">
                                 <Input
@@ -111,20 +121,32 @@ export default function LoginPage() {
                                 />
                             </div>
                         </div>
+                        <Button className="w-full mt-4" type="submit" disabled={loading}>
+                            {loading ? (isLogin ? 'Logging in...' : 'Signing up...') : (isLogin ? 'Login' : 'Sign Up')}
+                        </Button>
                     </form>
                 </CardContent>
                 <CardFooter className="flex flex-col space-y-2">
-                    <Button className="w-full" type="submit" onClick={handleLogin} disabled={loading}>
-                        {loading ? 'Logging in...' : 'Login'}
-                    </Button>
                     <Button className="w-full" variant="outline" onClick={handleGoogleLogin} disabled={loading}>
                         <img
                             src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
                             alt="Google logo"
                             className="w-5 h-5 mr-2"
                         />
-                        {loading ? 'Logging in...' : 'Login with Google'}
+                        {loading ? 'Logging in...' : 'Continue with Google'}
                     </Button>
+                    <div className="text-center mt-4">
+                        <span className="text-sm text-gray-600">
+                            {isLogin ? "Don't have an account? " : "Already have an account? "}
+                        </span>
+                        <button
+                            type="button"
+                            className="text-sm font-medium text-blue-600 hover:text-blue-500"
+                            onClick={() => setIsLogin(!isLogin)}
+                        >
+                            {isLogin ? 'Sign Up' : 'Login'}
+                        </button>
+                    </div>
                 </CardFooter>
             </Card>
         </div>
