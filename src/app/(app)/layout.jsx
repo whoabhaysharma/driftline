@@ -1,4 +1,5 @@
 import BottomNavigation from "@/components/BottomNavigation";
+import Header from "@/components/Header";
 import { verifySessionCookie } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -14,7 +15,8 @@ export default async function Layout({ children }) {
     }
     return (
         <>
-            <div className="p-2">
+            <Header/>
+            <div className="px-3 py-16">
                 {children}
             </div>
             <BottomNavigation />
