@@ -2,13 +2,13 @@
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Home, SquareMenu, CirclePercent, CircleUserRound } from "lucide-react"
+import { Home, CarFront, MessageCircle, Settings } from "lucide-react"
 
 const navItems = [
     { icon: Home, label: "Home", href: "/" },
-    { icon: SquareMenu, label: "Menu", href: "/menu" },
-    { icon: CirclePercent, label: "Offers", href: "/offers" },
-    { icon: CircleUserRound, label: "Contact Us", href: "/contact" },
+    { icon: CarFront, label: "Vehicles", href: "/vehicles" },
+    { icon: MessageCircle, label: "Chat", href: "/chat" },
+    { icon: Settings, label: "Contact Us", href: "/contact" },
 ]
 
 export default function BottomNavigation() {
