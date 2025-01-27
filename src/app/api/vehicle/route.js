@@ -1,61 +1,103 @@
-import { verifyToken } from "@/lib/utils";
-import { firestore } from "@/lib/firebase-admin";
-import { NextResponse } from "next/server";
+import AuthService from "@/services/AuthService";
+import VehicleService from "@/services/VehicleService";
+import ResponseHandler from "@/lib/helpers/ResponseHandler";
+import { VehicleSchema } from "@/lib/validations/vehicle-schema";
 
 export async function GET(request) {
-    try {
-        // Verify token and get user
-        const decodedToken = await verifyToken(request);
-        if (!decodedToken) {
-            return NextResponse.json(
-                { error: 'Unauthorized access' }, 
-                { status: 401 }
-            );
-        }
+  try {
+    const user = await AuthService.verifyUser(request);
+    if (!user) return ResponseHandler.error('Unauthorized access', 401);
 
-        // Get user document
-        const user = await getUserDocument(decodedToken.uid);
-        if (!user) {
-            return NextResponse.json(
-                { error: 'User not found' }, 
-                { status: 404 }
-            );
-        }
+    const vehicles = await VehicleService.getByOwner(user.ref);
+    return ResponseHandler.success(vehicles);
 
-        // Get vehicles for user
-        const vehicles = await getUserVehicles(user.ref);
-        return NextResponse.json(
-            { data: vehicles }, 
-            { status: 200 }
-        );
+  } catch (error) {
+    console.error('GET Error:', error);
+    return ResponseHandler.error('Internal server error');
+  }
+}
 
-    } catch (error) {
-        console.error('Error fetching vehicles:', error);
-        return NextResponse.json(
-            { error: 'Internal server error' }, 
-            { status: 500 }
-        );
+export async function POST(request) {
+  try {
+    const user = await AuthService.verifyUser(request);
+    if (!user) return ResponseHandler.error('Unauthorized access', 401);
+
+    const rawData = await request.json();
+    const result = VehicleSchema.create.safeParse(rawData);
+
+    if (!result.success) {
+      const errorMessages = result.error.issues.map(issue => issue.message);
+      return ResponseHandler.error(errorMessages.join(', '), 400);
     }
+
+    const vehicleId = await VehicleService.create({
+      ...result.data,
+      owner: user.ref,
+      notification_enabled: false
+    });
+
+    return ResponseHandler.created({ 
+      message: 'Vehicle added successfully', 
+      vehicleId 
+    });
+
+  } catch (error) {
+    console.error('POST Error:', error);
+    return ResponseHandler.error('Internal server error');
+  }
 }
 
-async function getUserDocument(uid) {
-    const usersRef = firestore.collection("users");
-    const userSnapshot = await usersRef
-        .where("uid", "==", uid)
-        .limit(1)
-        .get();
-    
-    return userSnapshot.empty ? null : userSnapshot.docs[0];
+export async function DELETE(request) {
+  try {
+    const user = await AuthService.verifyUser(request);
+    if (!user) return ResponseHandler.error('Unauthorized access', 401);
+
+    const { vehicleId } = await request.json();
+    if (!vehicleId) return ResponseHandler.error('Vehicle ID required', 400);
+
+    const vehicle = await VehicleService.getById(vehicleId);
+    if (!vehicle) return ResponseHandler.error('Vehicle not found', 404);
+    if (vehicle.data().owner.id !== user.ref.id) {
+      return ResponseHandler.error('Unauthorized access', 401);
+    }
+
+    await VehicleService.delete(vehicleId);
+    return ResponseHandler.success({ message: 'Vehicle deleted successfully' });
+
+  } catch (error) {
+    console.error('DELETE Error:', error);
+    return ResponseHandler.error('Internal server error');
+  }
 }
 
-async function getUserVehicles(userRef) {
-    const vehicleRef = firestore.collection('vehicles');
-    const vehiclesSnapshot = await vehicleRef
-        .where('owner', '==', userRef)
-        .get();
+export async function PATCH(request) {
+  try {
+    const user = await AuthService.verifyUser(request);
+    if (!user) return ResponseHandler.error('Unauthorized access', 401);
 
-    return vehiclesSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-    }));
+    const { searchParams } = new URL(request.url);
+    const vehicleId = searchParams.get('id');
+    if (!vehicleId) return ResponseHandler.error('Vehicle ID required', 400);
+
+    const rawData = await request.json();
+    const result = VehicleSchema.update.safeParse(rawData);
+
+    if (!result.success) {
+      const errorMessages = result.error.issues.map(issue => issue.message);
+      return ResponseHandler.error(errorMessages.join(', '), 400);
+    }
+
+    const vehicle = await VehicleService.getById(vehicleId);
+    if (!vehicle) return ResponseHandler.error('Vehicle not found', 404);
+    if (vehicle.data().owner.id !== user.ref.id) {
+      return ResponseHandler.error('Unauthorized access', 401);
+    }
+
+    await VehicleService.update(vehicleId, result.data);
+    return ResponseHandler.success({ message: 'Vehicle updated successfully' });
+
+  } catch (error) {
+    console.error('PATCH Error:', error);
+    return ResponseHandler.error('Internal server error');
+  }
 }
